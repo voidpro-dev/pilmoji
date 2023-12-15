@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import math
+import os
+import threading
+import time
+import base64
 
 import PIL
 from PIL import Image, ImageDraw, ImageFont
@@ -287,7 +291,44 @@ class Pilmoji:
         x, y = xy
         original_x = x
         nodes = to_nodes(text)
+        emojis = {}
 
+        if not os.path.isdir(".cache"):
+            os.mkdir(".cache")
+        if not os.path.isdir(".cache/discord"):
+            os.mkdir(".cache/discord")
+        if not os.path.isdir(".cache/twemoji"):
+            os.mkdir(".cache/twemoji")
+
+        def download():
+            while True:
+                try:
+                    node = download_nodes.pop(0)
+                except:
+                    break
+                content = node.content
+                if node.type is NodeType.emoji:
+                    filename = base64.b32encode(content.encode()).decode("utf-8")
+                    if not os.path.isfile(f".cache/twemoji/{filename}.png"):
+                        open(f".cache/twemoji/{filename}.png", "wb").write(self._get_emoji(content).read())
+                    emojis[content] = f".cache/twemoji/{filename}.png"
+
+                elif self._render_discord_emoji and node.type is NodeType.discord_emoji:
+                    if not os.path.isfile(f".cache/discord/{content}.png"):
+                        open(f".cache/discord/{content}.png", "wb").write(self._get_discord_emoji(content).read())
+                    emojis[content] = f".cache/discord/{content}.png"
+
+        threads = []
+        download_nodes = []
+        for line in nodes:
+            for node in line:
+                download_nodes.append(node)
+        for n in range(20):
+            thread = threading.Thread(target=download, daemon=True)
+            threads.append(thread)
+            thread.start()
+        for thread in threads:
+            thread.join()
         for line in nodes:
             x = original_x
 
@@ -305,29 +346,26 @@ class Pilmoji:
                     continue
 
                 stream = None
-                if node.type is NodeType.emoji:
-                    stream = self._get_emoji(content)
-
-                elif self._render_discord_emoji and node.type is NodeType.discord_emoji:
-                    stream = self._get_discord_emoji(content)
+                if content in emojis:
+                    stream = emojis[content]
 
                 if not stream:
-                    self.draw.text((x, y), content, *args, **kwargs)
+                    #self.draw.text((x, y), content, *args, **kwargs)
+                    width = int(emoji_scale_factor * font.size)
                     x += node_spacing + width
                     continue
 
                 with Image.open(stream).convert('RGBA') as asset:
                     width = int(emoji_scale_factor * font.size)
                     size = width, math.ceil(asset.height / asset.width * width)
-                    #asset = asset.resize(size, Image.Resampling.LANCZOS)
-                    asset.thumbnail((width,width), Image.Resampling.LANCZOS)
-
+                    asset = asset.resize(size, Image.Resampling.LANCZOS)
+                    #asset.thumbnail((width,width), Image.Resampling.LANCZOS)
+                    #print(asset.size)
                     if node.type is NodeType.emoji:
                         ox, oy = emoji_position_offset
                     elif node.type is NodeType.discord_emoji:
                         ox, oy = discord_emoji_position_offset
                     self.image.paste(asset, (x + ox, y + oy), asset)
-
                 x += node_spacing + width
             y += spacing + font.size
 
