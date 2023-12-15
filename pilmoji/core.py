@@ -223,6 +223,7 @@ class Pilmoji:
         *args,
         emoji_scale_factor: float = None,
         emoji_position_offset: Tuple[int, int] = None,
+        discord_emoji_position_offset: Tuple[int, int] = None,
         **kwargs
     ) -> None:
         """Draws the string at the given position, with emoji rendering support.
@@ -318,9 +319,13 @@ class Pilmoji:
                 with Image.open(stream).convert('RGBA') as asset:
                     width = int(emoji_scale_factor * font.size)
                     size = width, math.ceil(asset.height / asset.width * width)
-                    asset = asset.resize(size, Image.Resampling.LANCZOS)
+                    #asset = asset.resize(size, Image.Resampling.LANCZOS)
+                    asset.thumbnail((width,width), Image.Resampling.LANCZOS)
 
-                    ox, oy = emoji_position_offset
+                    if node.type is NodeType.emoji:
+                        ox, oy = emoji_position_offset
+                    elif node.type is NodeType.discord_emoji:
+                        ox, oy = discord_emoji_position_offset
                     self.image.paste(asset, (x + ox, y + oy), asset)
 
                 x += node_spacing + width
