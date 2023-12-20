@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import os
 import threading
+import re
 import time
 import base64
 
@@ -292,13 +293,14 @@ class Pilmoji:
         original_x = x
         nodes = to_nodes(text)
         emojis = {}
-
-        if not os.path.isdir(".cache"):
-            os.mkdir(".cache")
-        if not os.path.isdir(".cache/discord"):
-            os.mkdir(".cache/discord")
-        if not os.path.isdir(".cache/twemoji"):
-            os.mkdir(".cache/twemoji")
+        
+        pkg_dir = os.path.dirname(os.path.abspath(__file__))
+        if not os.path.isdir(f"{pkg_dir}/.cache"):
+            os.mkdir(f"{pkg_dir}/.cache")
+        if not os.path.isdir(f"{pkg_dir}/.cache/discord"):
+            os.mkdir(f"{pkg_dir}/.cache/discord")
+        if not os.path.isdir(f"{pkg_dir}/.cache/twemoji"):
+            os.mkdir(f"{pkg_dir}/.cache/twemoji")
 
         def download():
             while True:
@@ -309,14 +311,15 @@ class Pilmoji:
                 content = node.content
                 if node.type is NodeType.emoji:
                     filename = base64.b32encode(content.encode()).decode("utf-8")
-                    if not os.path.isfile(f".cache/twemoji/{filename}.png"):
-                        open(f".cache/twemoji/{filename}.png", "wb").write(self._get_emoji(content).read())
-                    emojis[content] = f".cache/twemoji/{filename}.png"
+                    if not os.path.isfile(f"{pkg_dir}/.cache/twemoji/{filename}.png"):
+                        self.source.get_emoji(content, f"{pkg_dir}/.cache/twemoji/{filename}.png")
+                        
+                    emojis[content] = f"{pkg_dir}/.cache/twemoji/{filename}.png"
 
                 elif self._render_discord_emoji and node.type is NodeType.discord_emoji:
-                    if not os.path.isfile(f".cache/discord/{content}.png"):
-                        open(f".cache/discord/{content}.png", "wb").write(self._get_discord_emoji(content).read())
-                    emojis[content] = f".cache/discord/{content}.png"
+                    if not os.path.isfile(f"{pkg_dir}/.cache/discord/{content}.png"):
+                        self.source.get_discord_emoji(content, f"{pkg_dir}/.cache/discord/{content}.png")
+                    emojis[content] = f"{pkg_dir}/.cache/discord/{content}.png"
 
         threads = []
         download_nodes = []
