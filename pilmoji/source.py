@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from io import BytesIO
+import subprocess
 
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
@@ -42,7 +43,7 @@ class BaseSource(ABC):
     """The base class for an emoji image source."""
 
     @abstractmethod
-    def get_emoji(self, emoji: str, /) -> Optional[BytesIO]:
+    def get_emoji(self, emoji: str, path:str, /) -> Optional[BytesIO]:
         """Retrieves a :class:`io.BytesIO` stream for the image of the given emoji.
 
         Parameters
@@ -60,7 +61,7 @@ class BaseSource(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_discord_emoji(self, id: int, /) -> Optional[BytesIO]:
+    def get_discord_emoji(self, id: int, path:str, /) -> Optional[BytesIO]:
         """Retrieves a :class:`io.BytesIO` stream for the image of the given Discord emoji.
 
         Parameters
@@ -122,11 +123,11 @@ class HTTPBasedSource(BaseSource):
                 return response.read()
 
     @abstractmethod
-    def get_emoji(self, emoji: str, /) -> Optional[BytesIO]:
+    def get_emoji(self, emoji: str, path:str, /) -> Optional[BytesIO]:
         raise NotImplementedError
 
     @abstractmethod
-    def get_discord_emoji(self, id: int, /) -> Optional[BytesIO]:
+    def get_discord_emoji(self, id: int, path:str, /) -> Optional[BytesIO]:
         raise NotImplementedError
 
 
@@ -136,17 +137,17 @@ class DiscordEmojiSourceMixin(HTTPBasedSource):
     BASE_DISCORD_EMOJI_URL: ClassVar[str] = 'https://cdn.discordapp.com/emojis/'
 
     @abstractmethod
-    def get_emoji(self, emoji: str, /) -> Optional[BytesIO]:
+    def get_emoji(self, emoji: str, path:str, /) -> Optional[BytesIO]:
         raise NotImplementedError
 
-    def get_discord_emoji(self, id: int, /) -> Optional[BytesIO]:
+    def get_discord_emoji(self, id: int, path:str, /) -> Optional[BytesIO]:
         url = self.BASE_DISCORD_EMOJI_URL + str(id) + '.png'
-        _to_catch = HTTPError if not _has_requests else requests.HTTPError
-
-        try:
-            return BytesIO(self.request(url))
-        except _to_catch:
-            pass
+        #_to_catch = HTTPError if not _has_requests else requests.HTTPError
+        subprocess.run(f'wget "{url}" -O "{path}"', shell=True, stderr=subprocess.DEVNULL)
+        #try:
+        #    return BytesIO(self.request(url))
+        #except _to_catch:
+        #    pass
 
 
 class EmojiCDNSource(DiscordEmojiSourceMixin):
@@ -155,17 +156,18 @@ class EmojiCDNSource(DiscordEmojiSourceMixin):
     BASE_EMOJI_CDN_URL: ClassVar[str] = 'https://emojicdn.elk.sh/'
     STYLE: ClassVar[str] = None
 
-    def get_emoji(self, emoji: str, /) -> Optional[BytesIO]:
+    def get_emoji(self, emoji: str, path:str) -> Optional[BytesIO]:
         if self.STYLE is None:
             raise TypeError('STYLE class variable unfilled.')
 
         url = self.BASE_EMOJI_CDN_URL + quote_plus(emoji) + '?style=' + quote_plus(self.STYLE)
-        _to_catch = HTTPError if not _has_requests else requests.HTTPError
+        subprocess.run(f'wget "{url}" -O "{path}"', shell=True, stderr=subprocess.DEVNULL)
+        #_to_catch = HTTPError if not _has_requests else requests.HTTPError
 
-        try:
-            return BytesIO(self.request(url))
-        except _to_catch:
-            pass
+        #try:
+        #    return BytesIO(self.request(url))
+        #except _to_catch:
+        #    pass
 
 
 class TwitterEmojiSource(EmojiCDNSource):
