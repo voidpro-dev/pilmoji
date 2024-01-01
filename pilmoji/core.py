@@ -369,7 +369,7 @@ class Pilmoji:
                         multiplier = asset.width/width
                         smallsize = int(asset.height/multiplier)
                     emoji_width = width if longsize == "width" else smallsize
-                    emoji_height = height if longsize == "height" else smallsize
+                    emoji_height = width if longsize == "height" else smallsize
                     size = emoji_width, emoji_height
                     asset = asset.resize(size, Image.Resampling.LANCZOS)
                     #asset.thumbnail((width,width), Image.Resampling.LANCZOS)
