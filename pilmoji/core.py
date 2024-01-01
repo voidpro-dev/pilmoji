@@ -360,17 +360,19 @@ class Pilmoji:
                     continue
 
                 with Image.open(stream).convert('RGBA') as asset:
-                    width = int(emoji_scale_factor * font.size)-emoji_spacing
+                    width = int(emoji_scale_factor * font.size)
                     longsize = "height" if asset.width < asset.height else "width"
                     if longsize == "height":
-                        multiplier = asset.height/width
+                        multiplier = asset.height/(width-emoji_spacing)
                         smallsize = int(asset.width/multiplier)
                     else:
-                        multiplier = asset.width/width
+                        multiplier = asset.width/(width-emoji_spacing)
                         smallsize = int(asset.height/multiplier)
-                    emoji_width = width if longsize == "width" else smallsize
-                    emoji_height = width if longsize == "height" else smallsize
+                    emoji_width = (width-emoji_spacing) if longsize == "width" else smallsize
+                    emoji_height = (width-emoji_spacing) if longsize == "height" else smallsize
                     size = emoji_width, emoji_height
+                    emoji_offset_width = int(width-(emoji_width/2)/2)
+                    emoji_offset_height = int(width-(emoji_height/2)/2)
                     asset = asset.resize(size, Image.Resampling.LANCZOS)
                     #asset.thumbnail((width,width), Image.Resampling.LANCZOS)
                     #print(asset.size)
@@ -378,8 +380,7 @@ class Pilmoji:
                         ox, oy = emoji_position_offset
                     elif node.type is NodeType.discord_emoji:
                         ox, oy = discord_emoji_position_offset
-                    self.image.paste(asset, (x + ox, y + oy), asset)
-                    width = int(emoji_scale_factor * font.size)
+                    self.image.paste(asset, (x + ox + emoji_offset_width, y + oy + emoji_offset_height), asset)
                 x += node_spacing + width
             y += spacing + font.size
 
