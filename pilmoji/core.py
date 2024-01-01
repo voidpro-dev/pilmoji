@@ -361,7 +361,11 @@ class Pilmoji:
 
                 with Image.open(stream).convert('RGBA') as asset:
                     width = int(emoji_scale_factor * font.size)
-                    size = width-emoji_spacing, math.ceil(asset.height / asset.width * (width-emoji_spacing))
+                    longsize = "height" if asset.width < asset.height else "width"
+                    smallsize = math.ceil(asset.height / asset.width * (width-emoji_spacing)) if longsize == "height" else math.ceil(asset.width / asset.height * (width-emoji_spacing))
+                    emoji_width = (width-emoji_spacing) if longsize == "width" else smallsize
+                    emoji_height = (width-emoji_spacing) if longsize == "height" else smallsize
+                    size = emoji_width, emoji_height
                     asset = asset.resize(size, Image.Resampling.LANCZOS)
                     #asset.thumbnail((width,width), Image.Resampling.LANCZOS)
                     #print(asset.size)
