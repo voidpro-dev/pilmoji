@@ -371,8 +371,8 @@ class Pilmoji:
                     emoji_width = (width-emoji_spacing) if longsize == "width" else smallsize
                     emoji_height = (width-emoji_spacing) if longsize == "height" else smallsize
                     size = emoji_width, emoji_height
-                    emoji_offset_width = int(width-(emoji_width/2)/2)
-                    emoji_offset_height = int(width-(emoji_height/2)/2)
+                    emoji_offset_width = int((width-(emoji_width/2))/2)
+                    emoji_offset_height = int((width-(emoji_height/2))/2)
                     asset = asset.resize(size, Image.Resampling.LANCZOS)
                     #asset.thumbnail((width,width), Image.Resampling.LANCZOS)
                     #print(asset.size)
