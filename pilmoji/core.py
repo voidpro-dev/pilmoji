@@ -217,6 +217,7 @@ class Pilmoji:
         font: FontT = None,
         anchor: str = None,
         spacing: int = 4,
+        emoji_spacing:int = 0,
         node_spacing: int = 0,
         align: str = "left",
         direction: str = None,
@@ -360,7 +361,7 @@ class Pilmoji:
 
                 with Image.open(stream).convert('RGBA') as asset:
                     width = int(emoji_scale_factor * font.size)
-                    size = width-2, math.ceil(asset.height / asset.width * (width-2))
+                    size = width-emoji_spacing, math.ceil(asset.height / asset.width * (width-emoji_spacing))
                     asset = asset.resize(size, Image.Resampling.LANCZOS)
                     #asset.thumbnail((width,width), Image.Resampling.LANCZOS)
                     #print(asset.size)
