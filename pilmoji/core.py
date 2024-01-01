@@ -364,10 +364,10 @@ class Pilmoji:
                     longsize = "height" if asset.width < asset.height else "width"
                     if longsize == "height":
                         multiplier = asset.height/width
-                        smallsize = asset.width/multiplier
+                        smallsize = int(asset.width/multiplier)
                     else:
                         multiplier = asset.width/width
-                        smallsize = asset.height/multiplier
+                        smallsize = int(asset.height/multiplier)
                     emoji_width = width if longsize == "width" else smallsize
                     emoji_height = height if longsize == "height" else smallsize
                     size = emoji_width, emoji_height
